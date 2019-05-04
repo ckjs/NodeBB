@@ -1,76 +1,16 @@
 'use strict';
 
-var fs = require('fs');
 var path = require('path');
 
 require('../../require-main');
 
-var packageInstall = require('./package-install');
-var dirname = require('./paths').baseDir;
-
-// check to make sure dependencies are installed
-try {
-	fs.accessSync(path.join(dirname, 'package.json'), fs.constants.R_OK);
-} catch (e) {
-	if (e.code === 'ENOENT') {
-		console.warn('package.json not found.');
-		console.log('Populating package.json...');
-
-		packageInstall.updatePackageFile();
-		packageInstall.preserveExtraneousPlugins();
-
-		try {
-			fs.accessSync(path.join(dirname, 'node_modules/colors/package.json'), fs.constants.R_OK);
-
-			require('colors');
-			console.log('OK'.green);
-		} catch (e) {
-			console.log('OK');
-		}
-	} else {
-		throw e;
-	}
-}
-
-try {
-	fs.accessSync(path.join(dirname, 'node_modules/semver/package.json'), fs.constants.R_OK);
-
-	var semver = require('semver');
-	var defaultPackage = require('../../install/package.json');
-
-	var checkVersion = function (packageName) {
-		var version = JSON.parse(fs.readFileSync(path.join(dirname, 'node_modules', packageName, 'package.json'), 'utf8')).version;
-		if (!semver.satisfies(version, defaultPackage.dependencies[packageName])) {
-			var e = new TypeError('Incorrect dependency version: ' + packageName);
-			e.code = 'DEP_WRONG_VERSION';
-			throw e;
-		}
-	};
-
-	checkVersion('nconf');
-	checkVersion('async');
-	checkVersion('commander');
-	checkVersion('colors');
-} catch (e) {
-	if (['ENOENT', 'DEP_WRONG_VERSION', 'MODULE_NOT_FOUND'].includes(e.code)) {
-		console.warn('Dependencies outdated or not yet installed.');
-		console.log('Installing them now...\n');
-
-		packageInstall.updatePackageFile();
-		packageInstall.installAll();
-
-		require('colors');
-		console.log('OK'.green + '\n'.reset);
-	} else {
-		throw e;
-	}
-}
 
 require('colors');
 // eslint-disable-next-line
 var nconf = require('nconf');
 // eslint-disable-next-line
 var program = require('commander');
+var dirname = require('./paths').baseDir;
 
 var pkg = require('../../package.json');
 var file = require('../file');
