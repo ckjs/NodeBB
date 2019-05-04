@@ -13,7 +13,6 @@ var program = require('commander');
 var dirname = require('./paths').baseDir;
 
 var pkg = require('../../package.json');
-var file = require('../file');
 var prestart = require('../prestart');
 
 program
@@ -39,15 +38,9 @@ prestart.setupWinston();
 
 // Alternate configuration file support
 var	configFile = path.resolve(dirname, program.config);
-var configExists = file.existsSync(configFile) || (nconf.get('url') && nconf.get('secret') && nconf.get('database'));
 
 prestart.loadConfig(configFile);
 prestart.versionCheck();
-
-if (!configExists && process.argv[2] !== 'setup') {
-	require('./setup').webInstall();
-	return;
-}
 
 process.env.CONFIG = configFile;
 
@@ -103,30 +96,6 @@ program
 		require('./running').log(program);
 	});
 
-// management commands
-program
-	.command('setup [config]')
-	.description('Run the NodeBB setup script, or setup with an initial config')
-	.action(function (initConfig) {
-		if (initConfig) {
-			try {
-				initConfig = JSON.parse(initConfig);
-			} catch (e) {
-				console.warn('Invalid JSON passed as initial config value.'.red);
-				console.log('If you meant to pass in an initial config value, please try again.\n');
-
-				throw e;
-			}
-		}
-		require('./setup').setup(initConfig);
-	});
-
-program
-	.command('install')
-	.description('Launch the NodeBB web installer for configuration setup')
-	.action(function () {
-		require('./setup').webInstall();
-	});
 program
 	.command('build [targets...]')
 	.description('Compile static assets ' + '(JS, CSS, templates, languages, sounds)'.red)

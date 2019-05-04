@@ -30,14 +30,10 @@ var async = require('async');
 var winston = require('winston');
 var path = require('path');
 
-var file = require('./src/file');
-
 global.env = process.env.NODE_ENV || 'production';
 
 // Alternate configuration file support
 var	configFile = path.resolve(__dirname, nconf.any(['config', 'CONFIG']) || 'config.json');
-
-var configExists = file.existsSync(configFile) || (nconf.get('url') && nconf.get('secret') && nconf.get('database'));
 
 var prestart = require('./src/prestart');
 prestart.loadConfig(configFile);
@@ -53,11 +49,7 @@ if (!process.send) {
 	winston.info('');
 }
 
-if (nconf.get('setup') || nconf.get('install')) {
-	require('./src/cli/setup').setup();
-} else if (!configExists) {
-	require('./install/web').install(nconf.get('port'));
-} else if (nconf.get('upgrade')) {
+if (nconf.get('upgrade')) {
 	require('./src/cli/upgrade').upgrade(true);
 } else if (nconf.get('reset')) {
 	var options = {
